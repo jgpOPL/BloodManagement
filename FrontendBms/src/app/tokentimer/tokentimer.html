@@ -1,0 +1,4 @@
+<div *ngIf="authService.isLoggedIn() && timeLeft > 0" class="timer-bar">
+  <span class="timer-icon">⏱</span>
+  Session expires in: <strong>{{ minutes }}m {{ seconds }}s</strong>
+</div>

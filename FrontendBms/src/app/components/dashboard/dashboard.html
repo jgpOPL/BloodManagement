@@ -1,0 +1,269 @@
+<div class="bms-layout">
+
+  <!-- Sidebar -->
+  <aside class="bms-sidebar">
+    <div class="sidebar-brand">
+      <h4>🩸 Admin Panel</h4>
+      <p>Blood Management System</p>
+    </div>
+    <button class="nav-item" [class.active]="activeSection==='users'"        (click)="showSection('users')">👥 All Users</button>
+    <button class="nav-item" [class.active]="activeSection==='bloodStock'"   (click)="showSection('bloodStock')">🩸 Blood Stock</button>
+    <button class="nav-item" [class.active]="activeSection==='bloodRequests'"(click)="showSection('bloodRequests')">📋 Blood Requests</button>
+    <button class="nav-item" [class.active]="activeSection==='donors'"       (click)="showSection('donors')">🙋 Donors</button>
+    <button class="nav-item" [class.active]="activeSection==='donations'"    (click)="showSection('donations')">💉 Donations</button>
+    <button class="nav-item"                                                  (click)="downloadReport()">📥 Download Report</button>
+  </aside>
+
+  <!-- Main -->
+  <main  class="bms-main">
+
+    <!-- Summary Cards -->
+    <div style="margin-bottom: 20px;" class="bms-stat-grid">
+      <div class="bms-stat-card">
+        <span class="label">Total Users</span>
+        <span class="value">{{ totalUsers }}</span>
+      </div>
+      <div class="bms-stat-card accent">
+        <span class="label">Blood Requests</span>
+        <span class="value">{{ totalBloodRequests }}</span>
+      </div>
+      <div class="bms-stat-card warning">
+        <span class="label">Pending</span>
+        <span class="value">{{ pendingCount }}</span>
+      </div>
+      <div class="bms-stat-card success">
+        <span class="label">Approved</span>
+        <span class="value">{{ approvedCount }}</span>
+      </div>
+    </div>
+
+    <!-- ── ALL USERS ── -->
+    <div *ngIf="activeSection==='users'" class="bms-table-wrap">
+      <div class="bms-table-header">
+        <h5>All Users</h5>
+        <div class="rows-select">
+          Rows per page:
+          <select [(ngModel)]="usersSize" (ngModelChange)="onUsersSizeChange($event)">
+            <option *ngFor="let s of pageSizeOptions" [value]="s">{{s}}</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="bms-table">
+          <thead><tr><th>#</th><th>Username</th><th>Email</th><th>Role</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let user of users; let i = index">
+              <td>{{ usersPage * usersSize + i + 1 }}</td>
+              <td><strong>{{ user.username }}</strong></td>
+              <td>{{ user.email }}</td>
+              <td>
+                <span class="bms-badge" [ngClass]="{'admin': user.role==='ADMIN','donor': user.role==='DONOR','hospital': user.role==='HOSPITAL'}">
+                  {{ user.role }}
+                </span>
+              </td>
+              <td>
+                <button style="background-color: rgb(250, 96, 96); color: #ffffff;"  class="bms-btn danger" (click)="remove(user.id)"> Remove</button>
+              </td>
+            </tr>
+            <tr *ngIf="users.length===0"><td colspan="5" class="bms-empty">No users found.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="bms-pagination">
+        <span class="info">Showing {{ usersPage*usersSize+1 }}–{{ min(usersPage*usersSize+usersSize, usersTotal) }} of {{ usersTotal }}</span>
+        <div class="controls">
+          <button class="bms-pg-btn" [disabled]="usersPage===0" (click)="onUsersPageChange(0)">«</button>
+          <button class="bms-pg-btn" [disabled]="usersPage===0" (click)="onUsersPageChange(usersPage-1)">‹</button>
+          <span>Page {{ usersPage+1 }} / {{ usersTotalPages }}</span>
+          <button class="bms-pg-btn" [disabled]="usersPage>=usersTotalPages-1" (click)="onUsersPageChange(usersPage+1)">›</button>
+          <button class="bms-pg-btn" [disabled]="usersPage>=usersTotalPages-1" (click)="onUsersPageChange(usersTotalPages-1)">»</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BLOOD STOCK ── -->
+    <div *ngIf="activeSection==='bloodStock'" class="bms-table-wrap">
+      <div class="bms-table-header">
+        <h5>Blood Stock</h5>
+        <div class="rows-select">
+          Rows per page:
+          <select [(ngModel)]="stockSize" (ngModelChange)="onStockSizeChange($event)">
+            <option *ngFor="let s of pageSizeOptions" [value]="s">{{s}}</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="bms-table">
+          <thead><tr><th>Blood Group</th><th>Units</th><th>Last Updated</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let stock of bloodStock">
+              <td>
+                <span class="blood-group-pill" [ngStyle]="{'background': getBloodColor(stock.bloodGroup), 'color': getTextColor(stock.bloodGroup)}">
+                   {{ stock.bloodGroup.replace('_',' ') }}
+                </span>
+              </td>
+              <td><strong>{{ stock.units | number:'1.1-2' }}</strong></td>
+              <td>{{ stock.lastUpdated | date:'dd MMM yyyy, HH:mm' }}</td>
+            </tr>
+            <!-- <tr *ngIf="bloodStock.length===0"><td colspan="3" class="bms-empty">No stock data.</td></tr> -->
+          </tbody>
+        </table>
+      </div>
+      <div class="bms-pagination">
+        <span class="info">Showing {{ stockPage*stockSize+1 }}–{{ min(stockPage*stockSize+stockSize, stockTotal) }} of {{ stockTotal }}</span>
+        <div class="controls">
+          <button class="bms-pg-btn" [disabled]="stockPage===0" (click)="onStockPageChange(0)">«</button>
+          <button class="bms-pg-btn" [disabled]="stockPage===0" (click)="onStockPageChange(stockPage-1)">‹</button>
+          <span>Page {{ stockPage+1 }} / {{ stockTotalPages }}</span>
+          <button class="bms-pg-btn" [disabled]="stockPage>=stockTotalPages-1" (click)="onStockPageChange(stockPage+1)">›</button>
+          <button class="bms-pg-btn" [disabled]="stockPage>=stockTotalPages-1" (click)="onStockPageChange(stockTotalPages-1)">»</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── BLOOD REQUESTS ── -->
+    <div *ngIf="activeSection==='bloodRequests'" class="bms-table-wrap">
+      <div class="bms-table-header">
+        <h5>Blood Requests</h5>
+        <div class="rows-select">
+          Rows per page:
+          <select [(ngModel)]="reqSize" (ngModelChange)="onReqSizeChange($event)">
+            <option *ngFor="let s of pageSizeOptions" [value]="s">{{s}}</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="bms-table">
+          <thead><tr><th>#</th><th>Hospital</th><th>Blood Group</th><th>Qty</th><th>Requested On</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let req of bloodRequests">
+              <td>{{ req.bloodRequestId }}</td>
+              <td>{{ req.hospitalName }}</td>
+              <td><span class="bms-badge blood">{{ req.bloodGroup }}</span></td>
+              <td><strong>{{ req.quantity }}</strong></td>
+              <td style="white-space:nowrap;font-size:0.82rem;color:#64748b;">
+                {{ req.requestDate | date:'dd MMM yyyy, hh:mm a' }}
+              </td>
+              <td>
+                <span class="bms-badge" [ngClass]="{'pending': req.status==='Pending','approved': req.status==='Approved','rejected': req.status==='Rejected'}">
+                  {{ req.status }}
+                </span>
+              </td>
+              <td>
+                <button style="background-color: #3d882e; text-align: center;" *ngIf="req.status==='Pending'" class="bms-btn verify" (click)="approveRequest(req.bloodRequestId)">Verify</button>
+                <span *ngIf="req.status==='Approved'" class="action-done approved">Approved</span>
+                <span *ngIf="req.status==='Rejected'" class="action-done rejected">Rejected</span>
+              </td>
+            </tr>
+            <tr *ngIf="bloodRequests.length===0"><td colspan="6" class="bms-empty">No requests found.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="bms-pagination">
+        <span class="info">Showing {{ reqPage*reqSize+1 }}–{{ min(reqPage*reqSize+reqSize, reqTotal) }} of {{ reqTotal }}</span>
+        <div class="controls">
+          <button class="bms-pg-btn" [disabled]="reqPage===0" (click)="onReqPageChange(0)">«</button>
+          <button class="bms-pg-btn" [disabled]="reqPage===0" (click)="onReqPageChange(reqPage-1)">‹</button>
+          <span>Page {{ reqPage+1 }} / {{ reqTotalPages }}</span>
+          <button class="bms-pg-btn" [disabled]="reqPage>=reqTotalPages-1" (click)="onReqPageChange(reqPage+1)">›</button>
+          <button class="bms-pg-btn" [disabled]="reqPage>=reqTotalPages-1" (click)="onReqPageChange(reqTotalPages-1)">»</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DONORS ── -->
+    <div *ngIf="activeSection==='donors'" class="bms-table-wrap">
+      <div class="bms-table-header">
+        <h5>All Donors</h5>
+        <div class="rows-select">
+          Rows per page:
+          <select [(ngModel)]="donorSize" (ngModelChange)="onDonorSizeChange($event)">
+            <option *ngFor="let s of pageSizeOptions" [value]="s">{{s}}</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="bms-table">
+          <thead><tr><th>#</th><th>Name</th><th>Gender</th><th>Age</th><th>Height</th><th>Weight</th><th>City</th><th>Blood Group</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let donor of donors">
+              <td>{{ donor.donorId }}</td>
+              <td><strong>{{ donor.name }}</strong></td>
+              <td>{{ donor.gender }}</td>
+              <td>{{ donor.age }}</td>
+              <td>{{ donor.height }}</td>
+              <td>{{ donor.weight }}</td>
+              <td>{{ donor.city }}</td>
+              <td><span class="bms-badge blood">{{ donor.bloodGroup }}</span></td>
+              <td>
+                <span class="bms-badge" [ngClass]="{'pending': donor.status==='Pending','approved': donor.status==='Approved','rejected': donor.status==='Rejected'}">
+                  {{ donor.status }}
+                </span>
+              </td>
+              <td>
+                <button *ngIf="donor.status==='Pending'" class="bms-btn verify" (click)="approveDonor(donor.donorId)">Verify</button>
+                <span *ngIf="donor.status==='Approved'" class="action-done approved">Approved</span>
+                <span *ngIf="donor.status==='Rejected'" class="action-done rejected">Rejected</span>
+              </td>
+            </tr>
+            <tr *ngIf="donors.length===0"><td colspan="10" class="bms-empty">No donors found.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="bms-pagination">
+        <span class="info">Showing {{ donorPage*donorSize+1 }}–{{ min(donorPage*donorSize+donorSize, donorTotal) }} of {{ donorTotal }}</span>
+        <div class="controls">
+          <button class="bms-pg-btn" [disabled]="donorPage===0" (click)="onDonorPageChange(0)">«</button>
+          <button class="bms-pg-btn" [disabled]="donorPage===0" (click)="onDonorPageChange(donorPage-1)">‹</button>
+          <span>Page {{ donorPage+1 }} / {{ donorTotalPages }}</span>
+          <button class="bms-pg-btn" [disabled]="donorPage>=donorTotalPages-1" (click)="onDonorPageChange(donorPage+1)">›</button>
+          <button class="bms-pg-btn" [disabled]="donorPage>=donorTotalPages-1" (click)="onDonorPageChange(donorTotalPages-1)">»</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── DONATIONS ── -->
+    <div *ngIf="activeSection==='donations'" class="bms-table-wrap">
+      <div class="bms-table-header">
+        <h5>All Donations</h5>
+        <div class="rows-select">
+          Rows per page:
+          <select [(ngModel)]="donationsSize" (ngModelChange)="onDonationsSizeChange($event)">
+            <option *ngFor="let s of pageSizeOptions" [value]="s">{{s}}</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="bms-table">
+          <thead><tr><th>Date</th><th>Blood Group</th><th>Quantity</th><th>Remarks</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let d of donations">
+              <td>{{ d.donationDate | date:'dd MMM yyyy' }}</td>
+              <td><span class="bms-badge blood">{{ d.bloodGroup }}</span></td>
+              <td><strong>{{ d.quantity }}</strong></td>
+              <td>
+                <span class="bms-badge" [ngClass]="{
+                  'approved': d.remarks==='Very Good Blood' || d.remarks==='Good Blood',
+                  'warning-badge': d.remarks==='Average',
+                  'rejected': d.remarks==='Poor Blood'
+                }">{{ d.remarks }}</span>
+              </td>
+            </tr>
+            <tr *ngIf="donations.length===0"><td colspan="4" class="bms-empty">No donations found.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="bms-pagination">
+        <span class="info">Showing {{ donationsPage*donationsSize+1 }}–{{ min(donationsPage*donationsSize+donationsSize, donationsTotal) }} of {{ donationsTotal }}</span>
+        <div class="controls">
+          <button class="bms-pg-btn" [disabled]="donationsPage===0" (click)="onDonationsPageChange(0)">«</button>
+          <button class="bms-pg-btn" [disabled]="donationsPage===0" (click)="onDonationsPageChange(donationsPage-1)">‹</button>
+          <span>Page {{ donationsPage+1 }} / {{ donationsTotalPages }}</span>
+          <button class="bms-pg-btn" [disabled]="donationsPage>=donationsTotalPages-1" (click)="onDonationsPageChange(donationsPage+1)">›</button>
+          <button class="bms-pg-btn" [disabled]="donationsPage>=donationsTotalPages-1" (click)="onDonationsPageChange(donationsTotalPages-1)">»</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>

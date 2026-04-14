@@ -1,0 +1,311 @@
+<div class="bms-layout">
+
+  <!-- Toast -->
+  <div class="dd-toast" [class.show]="toast.visible" [ngClass]="toast.type">
+    <div class="dd-toast-icon">
+      <span *ngIf="toast.type==='success'">✓</span>
+      <span *ngIf="toast.type==='error'">✕</span>
+      <span *ngIf="toast.type==='warning'">⚠</span>
+    </div>
+    <div class="dd-toast-body">
+      <p class="dd-toast-title">{{ toast.title }}</p>
+      <p class="dd-toast-msg">{{ toast.message }}</p>
+    </div>
+    <button class="dd-toast-close" (click)="dismissToast()">✕</button>
+    <div class="dd-toast-bar"></div>
+  </div>
+
+  <!-- Sidebar -->
+  <aside class="bms-sidebar">
+    <div class="sidebar-brand">
+      <h4>🩸 Donor Portal</h4>
+      <p>{{ username }}</p>
+    </div>
+    <button class="nav-item" [class.active]="activeSection==='profile'" (click)="showSection('profile')">👤 My Profile</button>
+    <button class="nav-item" [class.active]="activeSection==='history'" (click)="showSection('history')">📋 Donation History</button>
+  </aside>
+
+  <!-- Main -->
+  <main class="bms-main">
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="loading">
+      <p>Loading your profile...</p>
+    </div>
+
+    <!-- Register Form -->
+    <div *ngIf="showRegisterForm && !isLoading" class="register-card">
+      <h2>Complete Your Registration</h2>
+      <form [formGroup]="donorForm" (ngSubmit)="registerDonor()">
+
+        <input type="text" formControlName="name" placeholder="Full Name"
+          [class.is-invalid]="donorForm.get('name')?.touched && donorForm.get('name')?.invalid"/>
+        <div class="error-msg" *ngIf="donorForm.get('name')?.touched && donorForm.get('name')?.invalid">
+          <small *ngIf="donorForm.get('name')?.errors?.['required']">Name is required</small>
+          <small *ngIf="donorForm.get('name')?.errors?.['minlength']">Minimum 3 characters</small>
+        </div>
+
+        <input type="number" formControlName="weight" placeholder="Weight (kg)"
+          [class.is-invalid]="donorForm.get('weight')?.touched && donorForm.get('weight')?.invalid"/>
+        <div class="error-msg" *ngIf="donorForm.get('weight')?.touched && donorForm.get('weight')?.invalid">
+          <small *ngIf="donorForm.get('weight')?.errors?.['required']">Weight is required</small>
+          <small *ngIf="donorForm.get('weight')?.errors?.['min']">Min 30 kg</small>
+          <small *ngIf="donorForm.get('weight')?.errors?.['max']">Max 200 kg</small>
+        </div>
+
+        <input type="number" formControlName="height" placeholder="Height (m)" step="0.01"
+          [class.is-invalid]="donorForm.get('height')?.touched && donorForm.get('height')?.invalid"/>
+        <div class="error-msg" *ngIf="donorForm.get('height')?.touched && donorForm.get('height')?.invalid">
+          <small *ngIf="donorForm.get('height')?.errors?.['required']">Height is required</small>
+          <small *ngIf="donorForm.get('height')?.errors?.['min']">Min 1 m</small>
+          <small *ngIf="donorForm.get('height')?.errors?.['max']">Max 2.5 m</small>
+        </div>
+
+        <select formControlName="bloodGroup" [class.is-invalid]="donorForm.get('bloodGroup')?.touched && donorForm.get('bloodGroup')?.invalid">
+          <option value="">Select Blood Group</option>
+          <option value="A_POSITIVE">A_POSITIVE</option>
+          <option value="A_NEGATIVE">A_NEGATIVE</option>
+          <option value="B_POSITIVE">B_POSITIVE</option>
+          <option value="B_NEGATIVE">B_NEGATIVE</option>
+          <option value="O_POSITIVE">O_POSITIVE</option>
+          <option value="O_NEGATIVE">O_NEGATIVE</option>
+          <option value="AB_POSITIVE">AB_POSITIVE</option>
+          <option value="AB_NEGATIVE">AB_NEGATIVE</option>
+        </select>
+        <div class="error-msg" *ngIf="donorForm.get('bloodGroup')?.touched && donorForm.get('bloodGroup')?.invalid">
+          <small>Blood group is required</small>
+        </div>
+
+        <input type="number" formControlName="age" placeholder="Age"
+          [class.is-invalid]="donorForm.get('age')?.touched && donorForm.get('age')?.invalid"/>
+        <div class="error-msg" *ngIf="donorForm.get('age')?.touched && donorForm.get('age')?.invalid">
+          <small *ngIf="donorForm.get('age')?.errors?.['required']">Age is required</small>
+          <small *ngIf="donorForm.get('age')?.errors?.['min']">Min age 18</small>
+          <small *ngIf="donorForm.get('age')?.errors?.['max']">Max age 65</small>
+        </div>
+
+        <select formControlName="gender" [class.is-invalid]="donorForm.get('gender')?.touched && donorForm.get('gender')?.invalid">
+          <option value="">Select Gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+        </select>
+        <div class="error-msg" *ngIf="donorForm.get('gender')?.touched && donorForm.get('gender')?.invalid">
+          <small>Gender is required</small>
+        </div>
+
+        <input type="text" formControlName="city" placeholder="City"
+          [class.is-invalid]="donorForm.get('city')?.touched && donorForm.get('city')?.invalid"/>
+        <div class="error-msg" *ngIf="donorForm.get('city')?.touched && donorForm.get('city')?.invalid">
+          <small *ngIf="donorForm.get('city')?.errors?.['required']">City is required</small>
+          <small *ngIf="donorForm.get('city')?.errors?.['minlength']">Enter valid city name</small>
+        </div>
+
+        <button type="submit" [disabled]="donorForm.invalid">Register as Donor</button>
+      </form>
+    </div>
+
+    <!-- Pending -->
+    <div *ngIf="!isLoading && donor?.status === 'Pending'" class="pending-card">
+      <h3>⏳ Account Pending Approval</h3>
+      <p>Your registration is under review by the admin. Once approved, you will be able to view your profile and donate blood.</p>
+    </div>
+
+    <!-- Profile Section -->
+    <div *ngIf="activeSection==='profile' && !isLoading && (donor?.status==='Approved' || donor?.status==='Rejected')">
+      <p class="bms-page-title">Welcome back, {{ donor.name }} 👋</p>
+
+      <div class="profile-card">
+        <div class="profile-row"><span class="key">Blood Group</span><span class="val"><span class="bms-badge blood">{{ donor.bloodGroup }}</span></span></div>
+        <div class="profile-row"><span class="key">Age</span><span class="val">{{ donor.age }} years</span></div>
+        <div class="profile-row"><span class="key">Gender</span><span class="val">{{ donor.gender }}</span></div>
+        <div class="profile-row"><span class="key">Height</span><span class="val">{{ donor.height }} m</span></div>
+        <div class="profile-row"><span class="key">Weight</span><span class="val">{{ donor.weight }} kg</span></div>
+        <div class="profile-row"><span class="key">City</span><span class="val">{{ donor.city }}</span></div>
+        <div class="profile-row"><span class="key">Last Donation</span><span class="val">{{ donor.lastDonationDate | date:'dd MMM yyyy' }}</span></div>
+        <div class="profile-row"><span class="key">Status</span>
+          <span class="val">
+            <span class="bms-badge" [ngClass]="{'approved': donor.status==='Approved','rejected': donor.status==='Rejected'}">{{ donor.status }}</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button class="bms-btn danger" (click)="openDonateModal()">🩸 Donate Blood</button>
+        <button class="bms-btn blue"   (click)="openUpdateModal()">✏️ Update Profile</button>
+      </div>
+    </div>
+
+    <!-- Donation History -->
+    <div *ngIf="activeSection==='history' && !isLoading && donor?.status==='Approved'">
+      <p class="bms-page-title">Donation History</p>
+
+      <div class="bms-stat-grid">
+        <div class="bms-stat-card">
+          <span class="label">Total Donations</span>
+          <span class="value">{{ historyTotal }}</span>
+        </div>
+        <div class="bms-stat-card accent">
+          <span class="label">Total Units Donated</span>
+          <span class="value">{{ historyTotalUnits | number:'1.1-2' }}</span>
+        </div>
+        <div class="bms-stat-card success">
+          <span class="label">Last Donation</span>
+          <span class="value" style="font-size:1.1rem">{{ lastDonationDate | date:'dd MMM yyyy' }}</span>
+        </div>
+      </div>
+
+      <div class="bms-table-wrap">
+        <div class="bms-table-header">
+          <h5>Records</h5>
+          <div class="rows-select">
+            Rows per page:
+            <select [(ngModel)]="historySize" (ngModelChange)="onHistorySizeChange($event)">
+              <option *ngFor="let s of pageSizeOptions" [value]="s">{{s}}</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="bms-table">
+            <thead>
+              <tr><th>Date</th><th>Blood Group</th><th>Quantity (Units)</th><th>Remarks</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let d of donorHistory">
+                <td>{{ d.donationDate | date:'dd MMM yyyy' }}</td>
+                <td><span class="bms-badge blood">{{ d.bloodGroup.replace('_',' ') }}</span></td>
+                <td><strong class="text-primary">{{ d.quantity | number:'1.1-2' }}</strong></td>
+                <td>
+                  <span class="remark-badge" [ngClass]="{
+                    'vgood': d.remarks==='Very Good Blood',
+                    'good':  d.remarks==='Good Blood',
+                    'avg':   d.remarks==='Average',
+                    'poor':  d.remarks==='Poor Blood'
+                  }">{{ d.remarks }}</span>
+                </td>
+              </tr>
+              <tr *ngIf="donorHistory.length===0">
+                <td colspan="4" class="bms-empty">No donation records yet.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="bms-pagination">
+          <span class="info">Showing {{ historyPage*historySize+1 }}–{{ min(historyPage*historySize+historySize, historyTotal) }} of {{ historyTotal }}</span>
+          <div class="controls">
+            <button class="bms-pg-btn" [disabled]="historyPage===0" (click)="onHistoryPageChange(0)">«</button>
+            <button class="bms-pg-btn" [disabled]="historyPage===0" (click)="onHistoryPageChange(historyPage-1)">‹</button>
+            <span>Page {{ historyPage+1 }} / {{ historyTotalPages }}</span>
+            <button class="bms-pg-btn" [disabled]="historyPage>=historyTotalPages-1" (click)="onHistoryPageChange(historyPage+1)">›</button>
+            <button class="bms-pg-btn" [disabled]="historyPage>=historyTotalPages-1" (click)="onHistoryPageChange(historyTotalPages-1)">»</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- Donate Modal -->
+<div class="bms-modal-overlay" *ngIf="showDonateModal">
+  <div class="bms-modal">
+    <h3>🩸 Donate Blood</h3>
+    <form [formGroup]="donationForm" (ngSubmit)="submitDonation()">
+      <label>Quantity (Units)</label>
+      <input type="number" formControlName="quantity" placeholder="0.5 – 5 units"
+        [class.is-invalid]="donationForm.get('quantity')?.touched && donationForm.get('quantity')?.invalid"/>
+      <div class="error-msg" *ngIf="donationForm.get('quantity')?.touched && donationForm.get('quantity')?.invalid">
+        <small *ngIf="donationForm.get('quantity')?.errors?.['required']">Quantity is required</small>
+        <small *ngIf="donationForm.get('quantity')?.errors?.['min']">Minimum 0.5 unit</small>
+        <small *ngIf="donationForm.get('quantity')?.errors?.['max']">Maximum 5 units</small>
+      </div>
+
+      <label>Remarks</label>
+      <select formControlName="remarks" [class.is-invalid]="donationForm.get('remarks')?.touched && donationForm.get('remarks')?.invalid">
+        <option value="">Select Remarks</option>
+        <option value="Very Good Blood">Very Good Blood</option>
+        <option value="Good Blood">Good Blood</option>
+        <option value="Average">Average</option>
+        <option value="Poor Blood">Poor Blood</option>
+      </select>
+      <div class="error-msg" *ngIf="donationForm.get('remarks')?.touched && donationForm.get('remarks')?.invalid">
+        <small>Remarks are required</small>
+      </div>
+
+      <div class="modal-actions">
+        <button type="submit" class="bms-btn danger" [disabled]="donationForm.invalid">Submit Donation</button>
+        <button type="button" class="modal-cancel" (click)="showDonateModal=false">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Update Modal -->
+<div class="bms-modal-overlay" *ngIf="showUpdateModal">
+  <div class="bms-modal update-modal">
+    <h3>✏️ Update Profile</h3>
+    <form [formGroup]="updateForm" (ngSubmit)="submitUpdate()">
+
+      <div class="modal-grid">
+        <div class="modal-field">
+          <label>Full Name</label>
+          <input type="text" formControlName="name" placeholder="Name"
+            [class.is-invalid]="updateForm.get('name')?.touched && updateForm.get('name')?.invalid"/>
+          <div class="error-msg" *ngIf="updateForm.get('name')?.touched && updateForm.get('name')?.invalid">
+            <small>Min 3 characters required</small>
+          </div>
+        </div>
+
+        <div class="modal-field">
+          <label>Age</label>
+          <input type="number" formControlName="age" placeholder="Age"
+            [class.is-invalid]="updateForm.get('age')?.touched && updateForm.get('age')?.invalid"/>
+          <div class="error-msg" *ngIf="updateForm.get('age')?.touched && updateForm.get('age')?.invalid">
+            <small>Age 18–65</small>
+          </div>
+        </div>
+
+        <div class="modal-field">
+          <label>Weight (kg)</label>
+          <input type="number" formControlName="weight" placeholder="kg"
+            [class.is-invalid]="updateForm.get('weight')?.touched && updateForm.get('weight')?.invalid"/>
+          <div class="error-msg" *ngIf="updateForm.get('weight')?.touched && updateForm.get('weight')?.invalid">
+            <small>30–200 kg</small>
+          </div>
+        </div>
+
+        <div class="modal-field">
+          <label>Height (m)</label>
+          <input type="number" formControlName="height" placeholder="m" step="0.01"
+            [class.is-invalid]="updateForm.get('height')?.touched && updateForm.get('height')?.invalid"/>
+          <div class="error-msg" *ngIf="updateForm.get('height')?.touched && updateForm.get('height')?.invalid">
+            <small>1–2.5 m</small>
+          </div>
+        </div>
+
+        <div class="modal-field">
+          <label>Gender</label>
+          <select formControlName="gender">
+            <option value="">Select</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </div>
+
+        <div class="modal-field">
+          <label>City</label>
+          <input type="text" formControlName="city" placeholder="City"/>
+        </div>
+
+        <div class="modal-field full-width">
+          <label>Blood Group <span style="color:#94a3b8;font-weight:400;font-size:0.72rem">(cannot be changed)</span></label>
+          <input type="text" formControlName="bloodGroup" readonly/>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="submit" class="bms-btn blue" [disabled]="updateForm.invalid">Save Changes</button>
+        <button type="button" class="modal-cancel" (click)="showUpdateModal=false">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>

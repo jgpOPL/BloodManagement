@@ -1,0 +1,54 @@
+.unauthorized-container {
+  min-height: calc(100vh - 60px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--bg, #f0f2f8);
+  padding: 24px;
+}
+
+.unauth-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 48px 40px;
+  text-align: center;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 4px 24px rgba(58,58,88,0.12);
+  animation: fadeUp 0.4s ease;
+}
+
+.unauth-icon {
+  width: 80px; height: 80px;
+  background: #fee2e2;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px;
+  margin: 0 auto 20px;
+}
+
+.unauth-card h1 { font-size: 3.5rem; font-weight: 800; color: #3a3a58; margin: 0 0 4px; }
+.unauth-card h2 { font-size: 1.2rem; font-weight: 700; color: #1e293b; margin-bottom: 12px; }
+.unauth-card p  { color: #64748b; font-size: 0.88rem; line-height: 1.6; margin-bottom: 28px; }
+
+.unauth-actions { display: flex; justify-content: center; gap: 12px; }
+
+.unauth-btn {
+  padding: 10px 22px;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.unauth-btn.primary { background: #3a3a58; color: #fff; }
+.unauth-btn.primary:hover { background: #2c2c45; }
+.unauth-btn.secondary { background: #f1f5f9; color: #3a3a58; border: 1.5px solid #e2e8f0; }
+.unauth-btn.secondary:hover { background: #e2e8f0; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

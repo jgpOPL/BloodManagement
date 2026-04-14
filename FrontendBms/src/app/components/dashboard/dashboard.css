@@ -1,0 +1,34 @@
+/* Admin dashboard uses global bms-* classes from styles.css */
+.blood-group-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  white-space: nowrap;
+}
+
+/* ── Fix whitespace issues ── */
+.bms-main > div {
+  margin: 0;
+  padding: 0;
+}
+
+.bms-main > div:first-child {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* Ensure stat grid has no extra spacing */
+.bms-stat-grid {
+  margin-top: 0;
+}
+
+/* Ensure table wrap has consistent spacing */
+.bms-table-wrap {
+  margin-top: 0;
+}
